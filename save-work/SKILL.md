@@ -32,29 +32,18 @@ If there is nothing to commit and the local branch is not ahead of the remote, s
 so plainly and stop. Do not create an empty commit.
 
 If there is nothing staged or modified but the branch is ahead of its remote, skip
-to step 4 and just push. This is the common case where a previous session committed
-but failed to push.
+step 2 and go straight to the pull and push. This is the common case where a
+previous session committed but failed to push.
 
-### 2. Pull first
-
-Run `git pull --rebase`.
-
-Pulling before committing catches work pushed from the user's other device. Rebase
-keeps the history linear rather than littering it with merge commits from routine
-device switching.
-
-If the branch has no upstream set yet, skip the pull. Step 4 handles setting it.
-
-**If the rebase hits a conflict, stop immediately.** Run `git rebase --abort` to put
-the repository back exactly where it was, then tell the user which files conflicted
-and that their work is untouched and uncommitted. Do not attempt to resolve it.
-Conflicts mean two devices edited the same lines and only the user knows which
-version is right. Wait for their direction.
-
-### 3. Stage and commit
+### 2. Stage and commit
 
 Run `git add -A`, then review `git diff --cached --stat` and enough of
 `git diff --cached` to actually understand what changed.
+
+Commit before pulling. `git pull --rebase` refuses to run with unstaged changes in
+the tree, and uncommitted work is the normal case when this skill is invoked, so
+pulling first would fail almost every time. Committing first also means the work is
+already safe in local history before anything from the remote is applied.
 
 Write a commit message that describes the change, not the moment. A future reader
 scanning `git log` should be able to tell what happened without opening the diff.
@@ -84,6 +73,23 @@ span several unrelated things, say so in the message rather than picking one and
 ignoring the rest.
 
 Add a body only when the *why* is not obvious from the subject line.
+
+### 3. Pull
+
+Run `git pull --rebase`.
+
+Pulling before pushing catches work pushed from the user's other device, so the
+push in step 4 is not rejected for being behind. Rebase replays the commit from
+step 2 on top of whatever arrived, keeping history linear rather than littering it
+with merge commits from routine device switching.
+
+If the branch has no upstream set yet, skip the pull. Step 4 handles setting it.
+
+**If the rebase hits a conflict, stop immediately.** Run `git rebase --abort` to put
+the repository back exactly where it was after step 2, then tell the user which
+files conflicted, and that their work is committed locally and safe but not yet
+pushed. Do not attempt to resolve it. Conflicts mean two devices edited the same
+lines and only the user knows which version is right. Wait for their direction.
 
 ### 4. Push
 
